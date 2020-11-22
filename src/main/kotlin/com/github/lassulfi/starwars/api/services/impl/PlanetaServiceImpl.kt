@@ -18,4 +18,14 @@ class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
         }
         return planeta.id
     }
+
+    override fun getAll(): List<Planeta> {
+        val planetas: List<Planeta>
+        try {
+            planetas = repository.findAll().toList()
+        } catch (e: Exception) {
+            throw InternalServerErrorException("Um erro inesperado ocorreu ao recuperar a lista de planetas")
+        }
+        return planetas
+    }
 }
