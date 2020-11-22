@@ -1,25 +1,20 @@
 package com.github.lassulfi.starwars.api.services
 
 import com.github.lassulfi.starwars.api.exceptions.InternalServerErrorException
+import com.github.lassulfi.starwars.api.exceptions.ResourceNotFoundException
 import com.github.lassulfi.starwars.api.model.Planeta
 import com.github.lassulfi.starwars.api.repository.PlanetaRepository
 import com.github.lassulfi.starwars.api.services.impl.PlanetaServiceImpl
-import org.hamcrest.CoreMatchers.equalTo
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThat
-import org.junit.jupiter.api.Nested
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.*
+import org.mockito.Mockito
 import org.mockito.Mockito.*
 import org.springframework.dao.RecoverableDataAccessException
 import java.util.*
 
 // CONSTANTS
-const val NOME_PLANETA = "Planeta"
-const val CLIMA_PLANETA = "Clima"
-const val TERRENO_PLANETA = "Terreno"
-const val ID = "11111111-1111-1111-1111-111111111111"
+val ID = UUID.fromString("11111111-1111-1111-1111-111111111111")
+val PLANETA = Planeta(UUID.fromString("11111111-1111-1111-1111-111111111111"), "Planeta 1", "Clima 1", "Terreno 1")
 val LISTA_PLANETAS = listOf(
         Planeta(UUID.fromString("11111111-1111-1111-1111-111111111111"), "Planeta 1", "Clima 1", "Terreno 1"),
         Planeta(UUID.fromString("22222222-2222-2222-2222-222222222222"), "Planeta 2", "Clima 2", "Terreno 2"),
@@ -28,11 +23,17 @@ val LISTA_PLANETAS = listOf(
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanetaServiceTest {
 
-    val repository = mock(PlanetaRepository::class.java)
-    val service = PlanetaServiceImpl(repository)
     lateinit var planeta: Planeta
     lateinit var id: UUID
     lateinit var planetas: List<Planeta>
+    lateinit var service: PlanetaService
+    private lateinit var repository: PlanetaRepository
+
+    @BeforeEach
+    internal fun setup() {
+        repository = mock(PlanetaRepository::class.java)
+        service = PlanetaServiceImpl(repository)
+    }
 
     @Nested
     inner class `Criar Planeta` {
@@ -69,12 +70,41 @@ class PlanetaServiceTest {
         }
     }
 
+    @Nested
+    inner class `Recuperar planeta por id` {
+        @Test
+        fun `deve recuperar um planeta por id com sucesso`() {
+            `dado que temos um id valido`()
+            `dado que respository recupera uma instancia valida por um id`()
+            `quando chamamos o metodo recuperar por id`()
+            `entao experamos o id da instancia seja igual ao da requisicao`()
+        }
+
+        @Test
+        fun `deve lancar uma ResourceNotFoundException ao recuperar uma instancia por id`() {
+            `dado que temos um id valido`()
+            `dado que respository retorna um Optional Vazio ao recuperar uma instancia por id`()
+            `entao esperamos que seja lancada uma ResourceNotFoundException ao recuperar um planeta por id`()
+        }
+
+        @Test
+        fun `deve lancar uma InternalServerErrorException ao recupera uma instancia por id`() {
+            `dado que temos um id valido`()
+            `dado que repository lanca uma excecao`()
+            `entao esperamos que seja lancada uma InternalServerErrorException ao recuperar um planeta por id`()
+        }
+    }
+
+    private fun `dado que temos um id valido`() {
+        id = ID
+    }
+
     fun `dado que temos um planeta`() {
-        planeta = Planeta(UUID.fromString(ID), NOME_PLANETA, CLIMA_PLANETA, TERRENO_PLANETA)
+        planeta = PLANETA
     }
 
     fun `dado que planetaRepository salva com sucesso`() {
-        `when`(repository.save(planeta)).thenReturn(Planeta(UUID.fromString(ID), NOME_PLANETA, CLIMA_PLANETA, TERRENO_PLANETA))
+        `when`(repository.save(planeta)).thenReturn(PLANETA)
     }
 
     fun `dado que planetaRepository lanca excecao ao salvar`() {
@@ -90,6 +120,18 @@ class PlanetaServiceTest {
         `when`(repository.findAll()).thenThrow(RecoverableDataAccessException("Banco de dados indisponivel"))
     }
 
+    private fun `dado que respository recupera uma instancia valida por um id`() {
+        doReturn(Optional.of(PLANETA)).`when`(repository).findById(id)
+    }
+
+    private fun `dado que repository lanca uma excecao`() {
+        doThrow(RecoverableDataAccessException("Banco de dados indisponivel")).`when`(repository).findById(id)
+    }
+
+    private fun `dado que respository retorna um Optional Vazio ao recuperar uma instancia por id`() {
+        `when`(repository.findById(id)).thenReturn(Optional.empty())
+    }
+
     fun `quando chamamos o metodo salvar`() {
         id = service.create(planeta)
     }
@@ -98,8 +140,12 @@ class PlanetaServiceTest {
         planetas = service.getAll()
     }
 
+    private fun `quando chamamos o metodo recuperar por id`() {
+        planeta = service.getById(id)
+    }
+
     fun `entao experamos que o planeta seja criado com sucesso`() {
-        assertThat(id.toString(), equalTo(ID))
+        assertEquals(ID, planeta.id)
         verify(repository, times(1)).save(planeta)
     }
 
@@ -113,5 +159,17 @@ class PlanetaServiceTest {
 
     fun `entao experamos que seja lancada uma excecao ao recuperar a lista de planetas`() {
         assertThrows<InternalServerErrorException> { service.getAll() }
+    }
+
+    private fun `entao experamos o id da instancia seja igual ao da requisicao`() {
+        assertEquals(ID, this.planeta.id)
+    }
+
+    private fun `entao esperamos que seja lancada uma InternalServerErrorException ao recuperar um planeta por id`() {
+        assertThrows<InternalServerErrorException> { service.getById(id) }
+    }
+
+    private fun `entao esperamos que seja lancada uma ResourceNotFoundException ao recuperar um planeta por id`() {
+        assertThrows<ResourceNotFoundException> { service.getById(id) }
     }
 }
