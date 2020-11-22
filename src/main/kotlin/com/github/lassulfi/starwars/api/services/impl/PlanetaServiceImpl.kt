@@ -37,9 +37,21 @@ class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
         } catch (rex: ResourceNotFoundException) {
             throw rex
         } catch (e: Exception) {
-                throw InternalServerErrorException("Um erro inesperado ocorreu ao recuperar a lista de planetas")
+                throw InternalServerErrorException("Um erro inesperado ocorreu ao recuperar o planeta por id")
             }
         return planeta
     }
 
+    override fun deleteById(id: UUID) {
+        try {
+            if (!repository.existsById(id))
+                throw ResourceNotFoundException("Planeta não encontrado com id: ${id}")
+            else
+                repository.deleteById(id)
+        } catch (rex: ResourceNotFoundException) {
+          throw rex
+        } catch (e: Exception) {
+            throw InternalServerErrorException("Um erro inesperado ocorreu ao excluir um planeta por id")
+        }
+    }
 }

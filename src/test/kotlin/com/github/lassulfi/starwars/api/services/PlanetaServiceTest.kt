@@ -7,7 +7,6 @@ import com.github.lassulfi.starwars.api.repository.PlanetaRepository
 import com.github.lassulfi.starwars.api.services.impl.PlanetaServiceImpl
 import org.junit.Assert.assertEquals
 import org.junit.jupiter.api.*
-import org.mockito.Mockito
 import org.mockito.Mockito.*
 import org.springframework.dao.RecoverableDataAccessException
 import java.util.*
@@ -81,17 +80,46 @@ class PlanetaServiceTest {
         }
 
         @Test
+        fun `deve lancar uma InternalServerErrorException ao recupera uma instancia por id`() {
+            `dado que temos um id valido`()
+            `dado que repository lanca uma excecao`()
+            `entao esperamos que seja lancada uma InternalServerErrorException ao recuperar um planeta por id`()
+        }
+
+        @Test
         fun `deve lancar uma ResourceNotFoundException ao recuperar uma instancia por id`() {
             `dado que temos um id valido`()
             `dado que respository retorna um Optional Vazio ao recuperar uma instancia por id`()
             `entao esperamos que seja lancada uma ResourceNotFoundException ao recuperar um planeta por id`()
         }
+    }
+
+    @Nested
+    inner class `Excluir por Id` {
 
         @Test
-        fun `deve lancar uma InternalServerErrorException ao recupera uma instancia por id`() {
+        fun `deve excluir um planeta por id com sucesso`() {
             `dado que temos um id valido`()
-            `dado que repository lanca uma excecao`()
-            `entao esperamos que seja lancada uma InternalServerErrorException ao recuperar um planeta por id`()
+            `dado que a entidade identifica pelo id existe no respositorio`()
+            `dado que a exclusao por id ocorre com sucesso`()
+            `quando chamamos o metodo excluir por id`()
+            `entao esperamos que a instancia seja excluida`()
+        }
+
+        @Test
+        fun `deve lancar InternalServerErrorException ao excluir planeta por id`() {
+            `dado que temos um id valido`()
+            `dado que a entidade identifica pelo id existe no respositorio`()
+            `dado que a exclusao por id lanca uma excecao`()
+            `entao esperamos uma InternalServerErrorException ao excluir um planeta por id`()
+        }
+
+        @Test
+        fun `deve lancar ResourceNotException ao excluir planeta por id`() {
+            `dado que temos um id valido`()
+            `dado que a entidade identificada pelo id nao existe no repositorio`()
+            `entao esperamos uma ResourceNotFoundException ao excluir um planeta por id`()
+            `entao esperamos que o planeta nao seja excluido`()
         }
     }
 
@@ -132,6 +160,22 @@ class PlanetaServiceTest {
         `when`(repository.findById(id)).thenReturn(Optional.empty())
     }
 
+    private fun `dado que a entidade identifica pelo id existe no respositorio`() {
+        doReturn(true).`when`(repository).existsById(id)
+    }
+
+    private fun `dado que a exclusao por id ocorre com sucesso`() {
+        doNothing().`when`(repository).deleteById(id)
+    }
+
+    private fun `dado que a exclusao por id lanca uma excecao`() {
+        doThrow(RecoverableDataAccessException("Banco de dados indisponivel")).`when`(repository).deleteById(id)
+    }
+
+    private fun `dado que a entidade identificada pelo id nao existe no repositorio`() {
+        doReturn(false).`when`(repository).existsById(id)
+    }
+
     fun `quando chamamos o metodo salvar`() {
         id = service.create(planeta)
     }
@@ -142,6 +186,10 @@ class PlanetaServiceTest {
 
     private fun `quando chamamos o metodo recuperar por id`() {
         planeta = service.getById(id)
+    }
+
+    private fun `quando chamamos o metodo excluir por id`() {
+        service.deleteById(id)
     }
 
     fun `entao experamos que o planeta seja criado com sucesso`() {
@@ -171,5 +219,21 @@ class PlanetaServiceTest {
 
     private fun `entao esperamos que seja lancada uma ResourceNotFoundException ao recuperar um planeta por id`() {
         assertThrows<ResourceNotFoundException> { service.getById(id) }
+    }
+
+    private fun `entao esperamos que a instancia seja excluida`() {
+        verify(repository, times(1)).deleteById(any(UUID::class.java))
+    }
+
+    private fun `entao esperamos uma InternalServerErrorException ao excluir um planeta por id`() {
+        assertThrows<InternalServerErrorException> { service.deleteById(id) }
+    }
+
+    private fun `entao esperamos que o planeta nao seja excluido`() {
+        verify(repository, times(0)).deleteById(any(UUID::class.java))
+    }
+
+    private fun `entao esperamos uma ResourceNotFoundException ao excluir um planeta por id`() {
+        assertThrows<ResourceNotFoundException> { service.deleteById(id) }
     }
 }

@@ -7,4 +7,5 @@ interface PlanetaService {
     fun create(planeta: Planeta): UUID
     fun getAll(): List<Planeta>
     fun getById(id: UUID): Planeta
+    fun deleteById(id: UUID)
 }
