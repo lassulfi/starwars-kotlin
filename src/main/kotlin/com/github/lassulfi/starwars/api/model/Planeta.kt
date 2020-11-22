@@ -1,13 +1,12 @@
 package com.github.lassulfi.starwars.api.model
 
-import javax.persistence.Entity
-import javax.persistence.Table
-import javax.persistence.Id
+import java.util.*
+import javax.persistence.*
 
 @Entity
 @Table(name = "TBL_PLANETAS")
 data class Planeta (
-        @Id val id: Long = 1L,
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: UUID,
         val nome: String = "",
         val clima: String = "",
         val terreno: String = ""
