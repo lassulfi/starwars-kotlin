@@ -41,7 +41,7 @@ class PlanetaServiceTest {
             `dado que temos um planeta`()
             `dado que planetaRepository salva com sucesso`()
             `quando chamamos o metodo salvar`()
-            `entao experamos que o planeta seja criado com sucesso`()
+            `entao esperamos que o planeta seja salvo com sucesso`()
         }
 
         @Test()
@@ -123,12 +123,41 @@ class PlanetaServiceTest {
         }
     }
 
+    @Nested
+    inner class `Atualizar` {
+
+        @Test
+        fun `deve atualizar um planeta por id com sucesso`() {
+            `dado que temos um planeta`()
+            `dado que a entidade identifica pelo id existe no respositorio`()
+            `dado que planetaRepository salva com sucesso`()
+            `quando chamamos o metodo atualizar`()
+            `entao esperamos que o planeta seja salvo com sucesso`()
+        }
+
+        @Test
+        fun `deve lancar InternalServerErrorException ao atualizar`() {
+            `dado que temos um planeta`()
+            `dado que a entidade identifica pelo id existe no respositorio`()
+            `dado que planeta repository lanca uma excecao ao atualizar`()
+            `entao esperamos uma InternalServerErrorException ao atualizar`()
+        }
+
+        @Test
+        fun `deve lancar ResourceNotFoundException ao atualizar`() {
+            `dado que temos um planeta`()
+            `dado que a entidade identificada pelo id nao existe no repositorio`()
+            `entao esperamos uma ResourceNotFoundException ao atualizar`()
+        }
+    }
+
     private fun `dado que temos um id valido`() {
         id = ID
     }
 
     fun `dado que temos um planeta`() {
         planeta = PLANETA
+        this.id = planeta.id
     }
 
     fun `dado que planetaRepository salva com sucesso`() {
@@ -176,6 +205,10 @@ class PlanetaServiceTest {
         doReturn(false).`when`(repository).existsById(id)
     }
 
+    private fun `dado que planeta repository lanca uma excecao ao atualizar`() {
+        `when`(repository.save(planeta)).thenThrow(RecoverableDataAccessException("Banco de dados indisponivel"))
+    }
+
     fun `quando chamamos o metodo salvar`() {
         id = service.create(planeta)
     }
@@ -192,7 +225,11 @@ class PlanetaServiceTest {
         service.deleteById(id)
     }
 
-    fun `entao experamos que o planeta seja criado com sucesso`() {
+    private fun `quando chamamos o metodo atualizar`() {
+        service.update(planeta)
+    }
+
+    fun `entao esperamos que o planeta seja salvo com sucesso`() {
         assertEquals(ID, planeta.id)
         verify(repository, times(1)).save(planeta)
     }
@@ -235,5 +272,17 @@ class PlanetaServiceTest {
 
     private fun `entao esperamos uma ResourceNotFoundException ao excluir um planeta por id`() {
         assertThrows<ResourceNotFoundException> { service.deleteById(id) }
+    }
+
+    private fun `entao esperamos uma InternalServerErrorException ao atualizar`() {
+        assertThrows<InternalServerErrorException> { service.update(planeta) }
+    }
+
+    private fun `entao esperamos que o planeta nao seja salvo`() {
+        verify(repository, times(0)).save(any(Planeta::class.java))
+    }
+
+    private fun `entao esperamos uma ResourceNotFoundException ao atualizar`() {
+        assertThrows<ResourceNotFoundException> { service.update(planeta) }
     }
 }

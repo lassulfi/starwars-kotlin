@@ -54,4 +54,17 @@ class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
             throw InternalServerErrorException("Um erro inesperado ocorreu ao excluir um planeta por id")
         }
     }
+
+    override fun update(planeta: Planeta) {
+        try {
+            if(!repository.existsById(planeta.id))
+                throw ResourceNotFoundException("Planeta não encontrado com id: ${planeta.id}")
+            else
+                repository.save(planeta)
+        } catch (rex: ResourceNotFoundException) {
+            throw rex
+        } catch (e: Exception) {
+            throw InternalServerErrorException("Um erro inesperado ocorreu ao excluir um planeta por id")
+        }
+    }
 }
