@@ -7,7 +7,13 @@ import javax.persistence.*
 @Table(name = "TBL_PLANETAS")
 data class Planeta (
         @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: UUID,
-        val nome: String = "",
-        val clima: String = "",
-        val terreno: String = ""
-)
+        var nome: String?,
+        var clima: String?,
+        var terreno: String?
+) {
+    fun fillWith(obj: Planeta) {
+        this.nome = obj.nome
+        this.clima = obj.clima
+        this.terreno = obj.terreno
+    }
+}

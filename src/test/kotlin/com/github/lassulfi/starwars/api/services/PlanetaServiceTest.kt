@@ -14,6 +14,9 @@ import java.util.*
 // CONSTANTS
 val ID = UUID.fromString("11111111-1111-1111-1111-111111111111")
 val PLANETA = Planeta(UUID.fromString("11111111-1111-1111-1111-111111111111"), "Planeta 1", "Clima 1", "Terreno 1")
+val PLANETA_SEM_NOME = Planeta(UUID.fromString("11111111-1111-1111-1111-111111111111"), null, "Clima 1", "Terreno 1")
+val PLANETA_SEM_CLIMA = Planeta(UUID.fromString("11111111-1111-1111-1111-111111111111"), "Planeta 1", null, "Terreno 1")
+val PLANETA_SEM_TERRENO = Planeta(UUID.fromString("11111111-1111-1111-1111-111111111111"), "Planeta 1", "Clima 1", null)
 val LISTA_PLANETAS = listOf(
         Planeta(UUID.fromString("11111111-1111-1111-1111-111111111111"), "Planeta 1", "Clima 1", "Terreno 1"),
         Planeta(UUID.fromString("22222222-2222-2222-2222-222222222222"), "Planeta 2", "Clima 2", "Terreno 2"),
@@ -124,7 +127,7 @@ class PlanetaServiceTest {
     }
 
     @Nested
-    inner class `Atualizar` {
+    inner class Atualizar {
 
         @Test
         fun `deve atualizar um planeta por id com sucesso`() {
@@ -148,6 +151,61 @@ class PlanetaServiceTest {
             `dado que temos um planeta`()
             `dado que a entidade identificada pelo id nao existe no repositorio`()
             `entao esperamos uma ResourceNotFoundException ao atualizar`()
+        }
+    }
+
+    @Nested
+    inner class `Atualizacao Parcial` {
+
+        @Test
+        fun `deve atualizar parcialmente com sucesso`() {
+            `dado que temos um planeta`()
+            `dado que o repositorio retorna uma entidade por id`()
+            `dado que planetaRepository salva com sucesso`()
+            `quando chamamos o metodo atualizar parcialmente`()
+            `entao esperamos que o planeta seja salvo com sucesso`()
+        }
+
+        @Test
+        fun `deve atualizar um planeta sem nome com sucesso`() {
+            `dado que temos um planeta sem nome`()
+            `dado que o repositorio retorna uma entidade por id`()
+            `dado que planetaRepository salva com sucesso`()
+            `quando chamamos o metodo atualizar parcialmente`()
+            `entao esperamos que o planeta seja salvo com sucesso`()
+        }
+
+        @Test
+        fun `deve atualizar um planeta sem clima com sucesso`() {
+            `dado que temos um planeta sem clima`()
+            `dado que o repositorio retorna uma entidade por id`()
+            `dado que planetaRepository salva com sucesso`()
+            `quando chamamos o metodo atualizar parcialmente`()
+            `entao esperamos que o planeta seja salvo com sucesso`()
+        }
+
+        @Test
+        fun `deve atualizar um planeta sem terreno com sucesso`() {
+            `dado que temos um planeta sem terreno`()
+            `dado que o repositorio retorna uma entidade por id`()
+            `dado que planetaRepository salva com sucesso`()
+            `quando chamamos o metodo atualizar parcialmente`()
+            `entao esperamos que o planeta seja salvo com sucesso`()
+        }
+
+        @Test
+        fun `deve lancar InternalServerErrorException ao atualizar parcial`() {
+            `dado que temos um planeta`()
+            `dado que o repositorio retorna uma entidade por id`()
+            `dado que planetaRepository lanca excecao ao salvar`()
+            `entao esperamos uma InternalServerErrorException ao atualizar parcial`()
+        }
+
+        @Test
+        fun `deve lancar ResourceNotFoundException ao atualizar parcial`() {
+            `dado que temos um planeta`()
+            `dado que respository retorna um Optional Vazio ao recuperar uma instancia por id`()
+            `entao esperamos uma ResourceNotFoundException ao atualizar parcial`()
         }
     }
 
@@ -209,6 +267,25 @@ class PlanetaServiceTest {
         `when`(repository.save(planeta)).thenThrow(RecoverableDataAccessException("Banco de dados indisponivel"))
     }
 
+    private fun `dado que o repositorio retorna uma entidade por id`() {
+        `when`(repository.findById(id)).thenReturn(Optional.of(PLANETA))
+    }
+
+    private fun `dado que temos um planeta sem nome`() {
+        this.planeta = PLANETA_SEM_NOME
+        this.id = ID
+    }
+
+    private fun `dado que temos um planeta sem clima`() {
+        this.planeta = PLANETA_SEM_CLIMA
+        this.id = ID
+    }
+
+    private fun `dado que temos um planeta sem terreno`() {
+        this.planeta = PLANETA_SEM_TERRENO
+        this.id = ID
+    }
+
     fun `quando chamamos o metodo salvar`() {
         id = service.create(planeta)
     }
@@ -227,6 +304,10 @@ class PlanetaServiceTest {
 
     private fun `quando chamamos o metodo atualizar`() {
         service.update(planeta)
+    }
+
+    private fun `quando chamamos o metodo atualizar parcialmente`() {
+        service.partialUpdate(planeta)
     }
 
     fun `entao esperamos que o planeta seja salvo com sucesso`() {
@@ -284,5 +365,13 @@ class PlanetaServiceTest {
 
     private fun `entao esperamos uma ResourceNotFoundException ao atualizar`() {
         assertThrows<ResourceNotFoundException> { service.update(planeta) }
+    }
+
+    private fun `entao esperamos uma InternalServerErrorException ao atualizar parcial`() {
+        assertThrows<InternalServerErrorException> { service.partialUpdate(planeta) }
+    }
+
+    private fun `entao esperamos uma ResourceNotFoundException ao atualizar parcial`() {
+        assertThrows<ResourceNotFoundException> { service.partialUpdate(planeta) }
     }
 }

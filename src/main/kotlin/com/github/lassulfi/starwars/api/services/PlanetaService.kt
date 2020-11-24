@@ -9,4 +9,5 @@ interface PlanetaService {
     fun getById(id: UUID): Planeta
     fun deleteById(id: UUID)
     fun update(planeta: Planeta)
+    fun partialUpdate(planeta: Planeta)
 }
