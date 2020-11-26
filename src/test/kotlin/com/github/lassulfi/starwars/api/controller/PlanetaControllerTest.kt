@@ -1,6 +1,7 @@
 package com.github.lassulfi.starwars.api.controller
 
 import com.github.lassulfi.starwars.api.exceptions.InternalServerErrorException
+import com.github.lassulfi.starwars.api.exceptions.ResourceNotFoundException
 import com.github.lassulfi.starwars.api.model.Planeta
 import com.github.lassulfi.starwars.api.services.PlanetaService
 import org.junit.Assert.assertEquals
@@ -20,11 +21,14 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import java.util.*
 
 //CONSTANTS
-val LISTA_PLANETAS = listOf(
+private val ID_DEFAULT = UUID.fromString("11111111-1111-1111-1111-111111111111")
+private val LISTA_PLANETAS = listOf(
         Planeta(UUID.fromString("11111111-1111-1111-1111-111111111111"), "Planeta 1", "Clima 1", "Terreno 1"),
         Planeta(UUID.fromString("22222222-2222-2222-2222-222222222222"), "Planeta 2", "Clima 2", "Terreno 2"),
         Planeta(UUID.fromString("33333333-3333-3333-3333-333333333333"), "Planeta 3", "Clima 3", "Terreno 3"))
+private val PLANETA = Planeta(UUID.fromString("11111111-1111-1111-1111-111111111111"), "Planeta 1", "Clima 1", "Terreno 1")
 const val GET_ALL_URL = "/planetas"
+const val GET_BY_ID_URL = "/planetas/{id}"
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
@@ -78,10 +82,34 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
             `entao esperamos status code 200`()
             `entao esperamos um planeta`()
         }
+
+        @Test
+        fun `deve lancar um erro de nao encontrado`() {
+            `dado que temos um identificador`()
+            `dado que o metodo getById de service lanca uma ResourceNotFoundException`()
+            `quando chamamos a operacao GET planetas por id`()
+            `entao esperamos status code 404`()
+        }
+
+        @Test
+        fun `deve retornar um InternalServerError`() {
+            `dado que temos um identificador`()
+            `dado que o metodo getById de service lanca uma InternalServerErrorException`()
+            `quando chamamos a operacao GET planetas por id`()
+            `entao esperamos status code 500`()
+        }
+
+        @Test
+        fun `deve retornar um InternalServerError devido a um erro generico`() {
+            `dado que temos um identificador`()
+            `dado que o metodo getById da service lanca um erro generico`()
+            `quando chamamos a operacao GET planetas por id`()
+            `entao esperamos status code 500`()
+        }
     }
 
     private fun `dado que temos um identificador`() {
-        TODO("Not yet implemented")
+        this.id = ID_DEFAULT
     }
 
     private fun `dado que o metodo getAll de service recupera uma lista de planetas`() {
@@ -97,7 +125,19 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
     }
 
     private fun `dado que o metodo getById de service retorna um planeta`() {
-        TODO("Not yet implemented")
+        doReturn(PLANETA).`when`(service).getById(id)
+    }
+
+    private fun `dado que o metodo getById de service lanca uma ResourceNotFoundException`() {
+        doThrow(ResourceNotFoundException("Recurso nao encontrado")).`when`(service).getById(id)
+    }
+
+    private fun `dado que o metodo getById de service lanca uma InternalServerErrorException`() {
+        doThrow(InternalServerErrorException("Internal Error")).`when`(service).getById(this.id)
+    }
+
+    private fun `dado que o metodo getById da service lanca um erro generico`() {
+        doThrow(RuntimeException("Generic Error")).`when`(service).getById(this.id)
     }
 
     private fun `quando chamamos a operação GET planetas`() {
@@ -107,7 +147,9 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
     }
 
     private fun `quando chamamos a operacao GET planetas por id`() {
-        TODO("Not yet implemented")
+        this.response = performCall(MockMvcRequestBuilders
+                .get(GET_BY_ID_URL, this.id)
+                .accept(MediaType.APPLICATION_JSON))
     }
 
     private fun `entao esperamos status code 200`() {
@@ -123,6 +165,10 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
     }
 
     private fun `entao esperamos um planeta`() {
-        TODO("Not yet implemented")
+        assertEquals(super.toJson(PLANETA), String(this.response.contentAsByteArray))
+    }
+
+    private fun `entao esperamos status code 404`() {
+        assertEquals(HttpStatus.NOT_FOUND.value(), this.response.status)
     }
 }
