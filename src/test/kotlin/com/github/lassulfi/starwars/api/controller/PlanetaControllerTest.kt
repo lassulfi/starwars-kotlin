@@ -29,6 +29,8 @@ private val LISTA_PLANETAS = listOf(
 private val PLANETA = Planeta(UUID.fromString("11111111-1111-1111-1111-111111111111"), "Planeta 1", "Clima 1", "Terreno 1")
 const val GET_ALL_URL = "/planetas"
 const val GET_BY_ID_URL = "/planetas/{id}"
+const val POST_URL = "/planetas"
+const val CREATED_RESOURCE_URI = "/planetas/11111111-1111-1111-1111-111111111111"
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
@@ -108,6 +110,35 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
         }
     }
 
+    @Nested
+    inner class ` POST planetas` {
+
+        @Test
+        fun `deve criar um planeta com sucesso`() {
+            `dado que temos um planeta valido`()
+            `dado que o metodo create de service retorna um id valido`()
+            `quando chamamos a operacao POST planetas`()
+            `entao esperamos status code 201`()
+            `entao esperamos que o header location contenha a URI do recurso`()
+        }
+
+        @Test
+        fun `deve retornar um Internal Server Error`() {
+            `dado que temos um planeta valido`()
+            `dado que o metodo create de service lanca uma InternalServerErrorException`()
+            `quando chamamos a operacao POST planetas`()
+            `entao esperamos status code 500`()
+        }
+
+        @Test
+        fun `deve retornar um Internal Server Error devido a um erro generico`() {
+            `dado que temos um planeta valido`()
+            `dado que o metodo create lanca um erro generico`()
+            `quando chamamos a operacao POST planetas`()
+            `entao esperamos status code 500`()
+        }
+    }
+
     private fun `dado que temos um identificador`() {
         this.id = ID_DEFAULT
     }
@@ -140,6 +171,22 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
         doThrow(RuntimeException("Generic Error")).`when`(service).getById(this.id)
     }
 
+    private fun `dado que temos um planeta valido`() {
+        this.obj = PLANETA
+    }
+
+    private fun `dado que o metodo create de service retorna um id valido`() {
+        doReturn(ID_DEFAULT).`when`(service).create(this.obj)
+    }
+
+    private fun `dado que o metodo create de service lanca uma InternalServerErrorException`() {
+        doThrow(InternalServerErrorException("Internal Error")).`when`(service).create(this.obj)
+    }
+
+    private fun `dado que o metodo create lanca um erro generico`() {
+        doThrow(RuntimeException("Generic Error")).`when`(service).create(this.obj)
+    }
+
     private fun `quando chamamos a operação GET planetas`() {
         this.response = performCall(MockMvcRequestBuilders
                 .get(GET_ALL_URL)
@@ -150,6 +197,13 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
         this.response = performCall(MockMvcRequestBuilders
                 .get(GET_BY_ID_URL, this.id)
                 .accept(MediaType.APPLICATION_JSON))
+    }
+
+    private fun `quando chamamos a operacao POST planetas`() {
+        this.response = performCall(MockMvcRequestBuilders
+                .post(POST_URL)
+                .content(toJson(this.obj))
+                .contentType(MediaType.APPLICATION_JSON))
     }
 
     private fun `entao esperamos status code 200`() {
@@ -170,5 +224,14 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
 
     private fun `entao esperamos status code 404`() {
         assertEquals(HttpStatus.NOT_FOUND.value(), this.response.status)
+    }
+
+    private fun `entao esperamos status code 201`() {
+        assertEquals(HttpStatus.CREATED.value(), this.response.status)
+    }
+
+    private fun `entao esperamos que o header location contenha a URI do recurso`() {
+        val location = this.response.getHeader("location")
+        assertEquals(CREATED_RESOURCE_URI, location)
     }
 }
