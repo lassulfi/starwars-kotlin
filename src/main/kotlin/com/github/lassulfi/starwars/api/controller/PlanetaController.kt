@@ -18,8 +18,14 @@ class PlanetaController(val service: PlanetaService) {
     fun getById(@PathVariable id: UUID): Planeta = service.getById(id)
 
     @PostMapping
-    fun create(@RequestBody planeta: Planeta): ResponseEntity<Any> {
+    fun create(@RequestBody planeta: Planeta): ResponseEntity<Unit> {
         val id = service.create(planeta)
         return ResponseEntity.created(URI.create("/planetas/${id}")).build()
+    }
+
+    @PutMapping("/{id}")
+    fun update(@PathVariable id:UUID, @RequestBody planeta: Planeta): ResponseEntity<Unit> {
+        this.service.update(planeta)
+        return ResponseEntity.noContent().build()
     }
 }

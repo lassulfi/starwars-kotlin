@@ -11,8 +11,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.doReturn
-import org.mockito.Mockito.doThrow
+import org.mockito.Mockito.*
 import org.mockito.MockitoAnnotations
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -30,6 +29,7 @@ private val PLANETA = Planeta(UUID.fromString("11111111-1111-1111-1111-111111111
 const val GET_ALL_URL = "/planetas"
 const val GET_BY_ID_URL = "/planetas/{id}"
 const val POST_URL = "/planetas"
+const val PUT_URL = "/planetas/{id}"
 const val CREATED_RESOURCE_URI = "/planetas/11111111-1111-1111-1111-111111111111"
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -139,6 +139,38 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
         }
     }
 
+    @Nested
+    inner class `PUT planeta por id` {
+
+        @Test
+        fun `deve atualizar um planeta por id com sucesso`() {
+            `dado que temos um identificador`()
+            `dado que temos um planeta valido`()
+            `dado que o metodo update de service retorna com sucesso`()
+            `quando chamamos a operacao PUT planetas por id`()
+            `entao esperamos status code 204`()
+        }
+
+        @Test
+        fun `deve lancar uma Internal Server Error`() {
+            `dado que temos um identificador`()
+            `dado que temos um planeta valido`()
+            `dado que o metodo update de service lanca uma InternalServerErrorException`()
+            `quando chamamos a operacao PUT planetas por id`()
+            `entao esperamos status code 500`()
+        }
+
+        @Test
+        fun `deve lancar um Internal Server Error devido a um erro generico`() {
+            `dado que temos um identificador`()
+            `dado que temos um planeta valido`()
+            `dado que o metodo update lanca um erro generico`()
+            `quando chamamos a operacao PUT planetas por id`()
+            `entao esperamos status code 500`()
+        }
+
+    }
+
     private fun `dado que temos um identificador`() {
         this.id = ID_DEFAULT
     }
@@ -187,6 +219,18 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
         doThrow(RuntimeException("Generic Error")).`when`(service).create(this.obj)
     }
 
+    private fun `dado que o metodo update de service retorna com sucesso`() {
+        doNothing().`when`(service).update(this.obj)
+    }
+
+    private fun `dado que o metodo update de service lanca uma InternalServerErrorException`() {
+        doThrow(InternalServerErrorException("Internal Error")).`when`(service).update(this.obj)
+    }
+
+    private fun `dado que o metodo update lanca um erro generico`() {
+        doThrow(RuntimeException("Generic Error")).`when`(service).update(this.obj)
+    }
+
     private fun `quando chamamos a operação GET planetas`() {
         this.response = performCall(MockMvcRequestBuilders
                 .get(GET_ALL_URL)
@@ -202,6 +246,13 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
     private fun `quando chamamos a operacao POST planetas`() {
         this.response = performCall(MockMvcRequestBuilders
                 .post(POST_URL)
+                .content(toJson(this.obj))
+                .contentType(MediaType.APPLICATION_JSON))
+    }
+
+    private fun `quando chamamos a operacao PUT planetas por id`() {
+        this.response = performCall(MockMvcRequestBuilders
+                .put(PUT_URL, this.id)
                 .content(toJson(this.obj))
                 .contentType(MediaType.APPLICATION_JSON))
     }
@@ -233,5 +284,9 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
     private fun `entao esperamos que o header location contenha a URI do recurso`() {
         val location = this.response.getHeader("location")
         assertEquals(CREATED_RESOURCE_URI, location)
+    }
+
+    private fun `entao esperamos status code 204`() {
+        assertEquals(HttpStatus.NO_CONTENT.value(), this.response.status)
     }
 }
