@@ -31,6 +31,7 @@ const val GET_BY_ID_URL = "/planetas/{id}"
 const val POST_URL = "/planetas"
 const val PUT_URL = "/planetas/{id}"
 const val PATCH_URL = "/planetas/{id}"
+const val DELETE_URL = "/planetas/{id}"
 const val CREATED_RESOURCE_URI = "/planetas/11111111-1111-1111-1111-111111111111"
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -220,6 +221,42 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
         }
     }
 
+    @Nested
+    inner class `DELETE planeta por id` {
+
+        @Test
+        fun `deve excluir um planeta por id com sucesso`() {
+            `dado que temos um identificador`()
+            `dado que o metodo deleteById de service executa com sucesso`()
+            `quando chamamos o metodo DELETE planeta por id`()
+            `entao esperamos status code 204`()
+        }
+
+        @Test
+        fun `deve lancar uma Not Found`() {
+            `dado que temos um identificador`()
+            `dado que o metodo deleteById de service lanca uma ResourceNotFoundException`()
+            `quando chamamos o metodo DELETE planeta por id`()
+            `entao esperamos status code 404`()
+        }
+
+        @Test
+        fun `deve lancar uma Internal Server Error`() {
+            `dado que temos um identificador`()
+            `dado que o metodo deleteById de service lanca uma InternalServerErrorException`()
+            `quando chamamos o metodo DELETE planeta por id`()
+            `entao esperamos status code 500`()
+        }
+
+        @Test
+        fun `deve lancar uma Internal Server Error devido a um erro generico`(){
+            `dado que temos um identificador`()
+            `dado que o metodo deleteById de service lanca um erro generico`()
+            `quando chamamos o metodo DELETE planeta por id`()
+            `entao esperamos status code 500`()
+        }
+    }
+
     private fun `dado que o metodo partialUpdate de service executa com sucesso`() {
         doNothing().`when`(service).partialUpdate(this.obj)
     }
@@ -300,6 +337,22 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
         doThrow(RuntimeException("Generic Error")).`when`(service).partialUpdate(this.obj)
     }
 
+    private fun `dado que o metodo deleteById de service executa com sucesso`() {
+        doNothing().`when`(service).deleteById(this.id)
+    }
+
+    private fun `dado que o metodo deleteById de service lanca uma ResourceNotFoundException`() {
+        doThrow(ResourceNotFoundException("Not Found")).`when`(service).deleteById(this.id)
+    }
+
+    private fun `dado que o metodo deleteById de service lanca uma InternalServerErrorException`() {
+        doThrow(InternalServerErrorException("Internal Error")).`when`(service).deleteById(this.id)
+    }
+
+    private fun `dado que o metodo deleteById de service lanca um erro generico`() {
+        doThrow(RuntimeException("Generic Error")).`when`(service).deleteById(this.id)
+    }
+
     private fun `quando chamamos a operação GET planetas`() {
         this.response = performCall(MockMvcRequestBuilders
                 .get(GET_ALL_URL)
@@ -331,6 +384,11 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
                 .patch(PATCH_URL, this.id)
                 .content(toJson(this.obj))
                 .contentType(MediaType.APPLICATION_JSON))
+    }
+
+    private fun `quando chamamos o metodo DELETE planeta por id`() {
+        this.response = performCall(MockMvcRequestBuilders
+                .delete(DELETE_URL, this.id))
     }
 
     private fun `entao esperamos status code 200`() {

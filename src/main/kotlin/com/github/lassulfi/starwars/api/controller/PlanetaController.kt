@@ -36,4 +36,10 @@ class PlanetaController(val service: PlanetaService) {
         this.service.partialUpdate(planeta)
         return ResponseEntity.noContent().build()
     }
+
+    @DeleteMapping("/{id}")
+    fun deleteById(@PathVariable id: UUID): ResponseEntity<Unit> {
+        this.service.deleteById(id)
+        return ResponseEntity.noContent().build()
+    }
 }
