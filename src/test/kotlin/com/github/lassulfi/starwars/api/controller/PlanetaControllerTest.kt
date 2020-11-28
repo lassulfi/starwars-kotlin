@@ -30,6 +30,7 @@ const val GET_ALL_URL = "/planetas"
 const val GET_BY_ID_URL = "/planetas/{id}"
 const val POST_URL = "/planetas"
 const val PUT_URL = "/planetas/{id}"
+const val PATCH_URL = "/planetas/{id}"
 const val CREATED_RESOURCE_URI = "/planetas/11111111-1111-1111-1111-111111111111"
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -152,6 +153,15 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
         }
 
         @Test
+        fun `deve lancar uma Not Found`() {
+            `dado que temos um identificador`()
+            `dado que temos um planeta valido`()
+            `dado que o metodo update de service lanca uma ResourceNotFoundException`()
+            `quando chamamos a operacao PUT planetas por id`()
+            `entao esperamos status code 404`()
+        }
+
+        @Test
         fun `deve lancar uma Internal Server Error`() {
             `dado que temos um identificador`()
             `dado que temos um planeta valido`()
@@ -168,7 +178,50 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
             `quando chamamos a operacao PUT planetas por id`()
             `entao esperamos status code 500`()
         }
+    }
 
+    @Nested
+    inner class `PATCH planeta por id` {
+
+        @Test
+        fun `deve atualizar um planeta por id com sucesso`() {
+            `dado que temos um identificador`()
+            `dado que temos um planeta valido`()
+            `dado que o metodo partialUpdate de service executa com sucesso`()
+            `quando chamamos a operacao PATCH planetas por id`()
+            `entao esperamos status code 204`()
+        }
+
+        @Test
+        fun `deve lancar uma Not Found`() {
+            `dado que temos um identificador`()
+            `dado que temos um planeta valido`()
+            `dado que o metodo partialUpdate de service lance uma ResourceNotFoundException`()
+            `quando chamamos a operacao PATCH planetas por id`()
+            `entao esperamos status code 404`()
+        }
+
+        @Test
+        fun `deve lancar uma Internal Server Error`() {
+            `dado que temos um identificador`()
+            `dado que temos um planeta valido`()
+            `dado que o metodo partialUpdate de service lance uma InternalServerErrorException`()
+            `quando chamamos a operacao PATCH planetas por id`()
+            `entao esperamos status code 500`()
+        }
+
+        @Test
+        fun `deve lancar uma Internal Server Error devido a um erro generico`() {
+            `dado que temos um identificador`()
+            `dado que temos um planeta valido`()
+            `dado que o metodo partialUpdate de service lanca um erro generico`()
+            `quando chamamos a operacao PATCH planetas por id`()
+            `entao esperamos status code 500`()
+        }
+    }
+
+    private fun `dado que o metodo partialUpdate de service executa com sucesso`() {
+        doNothing().`when`(service).partialUpdate(this.obj)
     }
 
     private fun `dado que temos um identificador`() {
@@ -223,12 +276,28 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
         doNothing().`when`(service).update(this.obj)
     }
 
+    private fun `dado que o metodo update de service lanca uma ResourceNotFoundException`() {
+        doThrow(ResourceNotFoundException("Not found")).`when`(service).update(this.obj)
+    }
+
     private fun `dado que o metodo update de service lanca uma InternalServerErrorException`() {
         doThrow(InternalServerErrorException("Internal Error")).`when`(service).update(this.obj)
     }
 
     private fun `dado que o metodo update lanca um erro generico`() {
         doThrow(RuntimeException("Generic Error")).`when`(service).update(this.obj)
+    }
+
+    private fun `dado que o metodo partialUpdate de service lance uma ResourceNotFoundException`() {
+        doThrow(ResourceNotFoundException("Not Found")).`when`(service).partialUpdate(this.obj)
+    }
+
+    private fun `dado que o metodo partialUpdate de service lance uma InternalServerErrorException`() {
+        doThrow(InternalServerErrorException("Internal Error")).`when`(service).partialUpdate(this.obj)
+    }
+
+    private fun `dado que o metodo partialUpdate de service lanca um erro generico`() {
+        doThrow(RuntimeException("Generic Error")).`when`(service).partialUpdate(this.obj)
     }
 
     private fun `quando chamamos a operação GET planetas`() {
@@ -253,6 +322,13 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
     private fun `quando chamamos a operacao PUT planetas por id`() {
         this.response = performCall(MockMvcRequestBuilders
                 .put(PUT_URL, this.id)
+                .content(toJson(this.obj))
+                .contentType(MediaType.APPLICATION_JSON))
+    }
+
+    private fun `quando chamamos a operacao PATCH planetas por id`() {
+        this.response = performCall(MockMvcRequestBuilders
+                .patch(PATCH_URL, this.id)
                 .content(toJson(this.obj))
                 .contentType(MediaType.APPLICATION_JSON))
     }

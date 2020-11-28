@@ -25,7 +25,15 @@ class PlanetaController(val service: PlanetaService) {
 
     @PutMapping("/{id}")
     fun update(@PathVariable id:UUID, @RequestBody planeta: Planeta): ResponseEntity<Unit> {
+        planeta.id = id
         this.service.update(planeta)
+        return ResponseEntity.noContent().build()
+    }
+
+    @PatchMapping("/{id}")
+    fun partialUpdate(@PathVariable id: UUID, @RequestBody planeta: Planeta): ResponseEntity<Unit> {
+        planeta.id = id
+        this.service.partialUpdate(planeta)
         return ResponseEntity.noContent().build()
     }
 }

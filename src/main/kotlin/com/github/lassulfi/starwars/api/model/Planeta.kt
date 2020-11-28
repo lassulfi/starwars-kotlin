@@ -6,7 +6,7 @@ import javax.persistence.*
 @Entity
 @Table(name = "TBL_PLANETAS")
 data class Planeta (
-        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) val id: UUID,
+        @Id @GeneratedValue(strategy = GenerationType.IDENTITY) var id: UUID,
         var nome: String?,
         var clima: String?,
         var terreno: String?
