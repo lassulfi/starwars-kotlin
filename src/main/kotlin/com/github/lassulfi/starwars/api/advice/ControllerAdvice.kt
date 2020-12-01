@@ -1,4 +1,4 @@
-package com.github.lassulfi.starwars.api.controller
+package com.github.lassulfi.starwars.api.advice
 
 import com.github.lassulfi.starwars.api.dto.ErrorMessage
 import com.github.lassulfi.starwars.api.exceptions.InternalServerErrorException

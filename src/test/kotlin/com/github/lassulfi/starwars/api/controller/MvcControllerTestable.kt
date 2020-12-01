@@ -1,6 +1,7 @@
 package com.github.lassulfi.starwars.api.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.lassulfi.starwars.api.advice.ControllerAdvice
 import org.springframework.mock.web.MockHttpServletResponse
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.RequestBuilder
