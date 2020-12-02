@@ -5,11 +5,14 @@ import com.github.lassulfi.starwars.api.exceptions.ResourceNotFoundException
 import com.github.lassulfi.starwars.api.model.Planeta
 import com.github.lassulfi.starwars.api.repository.PlanetaRepository
 import com.github.lassulfi.starwars.api.services.PlanetaService
+import org.springframework.cache.annotation.CacheEvict
+import org.springframework.cache.annotation.Cacheable
 import org.springframework.stereotype.Service
 import java.util.*
 @Service
 class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
 
+    @CacheEvict("planetas", allEntries = true)
     override fun create(planeta: Planeta): UUID {
         try {
             repository.save(planeta)
@@ -19,6 +22,7 @@ class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
         return planeta.id
     }
 
+    @Cacheable("planetas")
     override fun getAll(): List<Planeta> {
         val planetas: List<Planeta>
         try {
@@ -42,6 +46,7 @@ class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
         return planeta
     }
 
+    @CacheEvict("planetas", allEntries = true)
     override fun deleteById(id: UUID) {
         try {
             if (!repository.existsById(id))
@@ -55,6 +60,7 @@ class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
         }
     }
 
+    @CacheEvict("planetas", allEntries = true)
     override fun update(planeta: Planeta) {
         try {
             if(!repository.existsById(planeta.id))
@@ -68,6 +74,7 @@ class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
         }
     }
 
+    @CacheEvict("planetas", allEntries = true)
     override fun partialUpdate(planeta: Planeta) {
         try {
             val entidade = getById(planeta.id)
