@@ -7,6 +7,7 @@ import com.github.lassulfi.starwars.api.repository.PlanetaRepository
 import com.github.lassulfi.starwars.api.services.PlanetaService
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import java.util.*
 @Service
@@ -23,10 +24,11 @@ class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
     }
 
     @Cacheable("planetas")
-    override fun getAll(): List<Planeta> {
+    override fun getAll(sort:String?, order: String?): List<Planeta> {
         val planetas: List<Planeta>
         try {
-            planetas = repository.findAll().toList()
+            if (sort == null) planetas = repository.findAll().toList()
+            else planetas = recuperarListaOrdenada(repository, sort, order)
         } catch (e: Exception) {
             throw InternalServerErrorException("Um erro inesperado ocorreu ao recuperar a lista de planetas")
         }
@@ -85,5 +87,11 @@ class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
         }catch (e: Exception) {
             throw InternalServerErrorException("Um erro inesperado ocorreu ao atualizar um planeta parcialmente")
         }
+    }
+
+    private fun recuperarListaOrdenada(repository: PlanetaRepository, sort: String, order: String?): List<Planeta> {
+        return if (order != null && order.equals("asc", ignoreCase = true))
+            repository.findAll(Sort.by(sort).ascending()).toList()
+        else repository.findAll(Sort.by(sort).descending()).toList()
     }
 }

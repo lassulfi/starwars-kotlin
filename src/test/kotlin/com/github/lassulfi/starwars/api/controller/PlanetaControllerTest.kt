@@ -266,15 +266,15 @@ class PlanetaControllerTest: MvcControllerTestable<PlanetaController>() {
     }
 
     private fun `dado que o metodo getAll de service recupera uma lista de planetas`() {
-        doReturn(LISTA_PLANETAS).`when`(service).getAll()
+        doReturn(LISTA_PLANETAS).`when`(service).getAll(null, null)
     }
 
     private fun `dado que o metodo getAll de service lanca um InternalServerError`() {
-        doThrow(InternalServerErrorException("Internal Error")).`when`(service).getAll()
+        doThrow(InternalServerErrorException("Internal Error")).`when`(service).getAll(null, null)
     }
 
     private fun `dado que o metodo getAll de service lanca um erro generico`() {
-        doThrow(RuntimeException("Generic Error")).`when`(service).getAll()
+        doThrow(RuntimeException("Generic Error")).`when`(service).getAll(null, null)
     }
 
     private fun `dado que o metodo getById de service retorna um planeta`() {

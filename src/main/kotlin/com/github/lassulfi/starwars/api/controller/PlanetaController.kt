@@ -28,7 +28,7 @@ class PlanetaController(val service: PlanetaService) {
             ApiResponse(code = 200, message = "OK"),
             ApiResponse(code = 500, message = "Internal Server Error", response = ErrorMessage::class)
     )
-    fun getAll(): List<Planeta> = service.getAll()
+    fun getAll(): List<Planeta> = service.getAll(null, null)
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

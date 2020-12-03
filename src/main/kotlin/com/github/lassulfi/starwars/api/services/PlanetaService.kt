@@ -5,7 +5,7 @@ import java.util.*
 
 interface PlanetaService {
     fun create(planeta: Planeta): UUID
-    fun getAll(): List<Planeta>
+    fun getAll(sort: String?, order: String? = "asc"): List<Planeta>
     fun getById(id: UUID): Planeta
     fun deleteById(id: UUID)
     fun update(planeta: Planeta)
