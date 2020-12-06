@@ -26,9 +26,17 @@ class PlanetaController(val service: PlanetaService) {
             produces = "application/json")
     @ApiResponses(
             ApiResponse(code = 200, message = "OK"),
+            ApiResponse(code = 422, message = "Unprocessable Entity", response = ErrorMessage::class),
             ApiResponse(code = 500, message = "Internal Server Error", response = ErrorMessage::class)
     )
-    fun getAll(): List<Planeta> = service.getAll(null, null)
+    fun getAll(
+            @RequestParam(required = false, defaultValue = "", value = "sort")
+            @ApiParam("parametro para ordenação", required = false, allowableValues = "nome, terreno, clima")
+            sortBy: String?,
+            @RequestParam(required = false, defaultValue = "asc", value = "order")
+            @ApiParam("sentido de ordenação", required = false, allowableValues = "asc, desc")
+            orderBy: String?): List<Planeta> =
+            service.getAll(sortBy, orderBy)
 
     @GetMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)

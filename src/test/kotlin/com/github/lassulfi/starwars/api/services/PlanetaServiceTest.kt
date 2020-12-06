@@ -2,6 +2,7 @@ package com.github.lassulfi.starwars.api.services
 
 import com.github.lassulfi.starwars.api.exceptions.InternalServerErrorException
 import com.github.lassulfi.starwars.api.exceptions.ResourceNotFoundException
+import com.github.lassulfi.starwars.api.exceptions.UnprocessableEntityException
 import com.github.lassulfi.starwars.api.model.Planeta
 import com.github.lassulfi.starwars.api.repository.PlanetaRepository
 import com.github.lassulfi.starwars.api.services.impl.PlanetaServiceImpl
@@ -154,6 +155,12 @@ class PlanetaServiceTest {
             `dado que repository recupera uma lista de planetas ordenados pelo clima em ordem descendente`()
             `quando chamados o metodo recuperar todos de forma ordenada`()
             `entao esperamos uma lista de planetas ordenados pelo clima em ordem descendente`()
+        }
+
+        @Test
+        fun `deve lancar um UnprocessableEntityException`() {
+            `dado que temos um parametro de ordenacao invalido`()
+            `entao esperamos que seja lancada uma ResourceNotFoundException`()
         }
 
         @Test
@@ -418,6 +425,10 @@ class PlanetaServiceTest {
         doThrow(RecoverableDataAccessException("Banco de dados indisponivel")).`when`(repository).findAll(Sort.by(sort).ascending())
     }
 
+    private fun `dado que temos um parametro de ordenacao invalido`() {
+        this.sort = "invalido"
+    }
+
     fun `quando chamamos o metodo salvar`() {
         id = service.create(planeta)
     }
@@ -537,5 +548,9 @@ class PlanetaServiceTest {
 
     private fun `entao esperamos que uma excecao seja lancada ao recuperar a lista ordenada`() {
         assertThrows<InternalServerErrorException> { service.getAll(this.sort, this.order) }
+    }
+
+    private fun `entao esperamos que seja lancada uma ResourceNotFoundException`() {
+        assertThrows<UnprocessableEntityException> { service.getAll(sort) }
     }
 }

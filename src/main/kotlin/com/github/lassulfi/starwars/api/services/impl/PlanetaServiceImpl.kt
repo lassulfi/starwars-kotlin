@@ -2,6 +2,7 @@ package com.github.lassulfi.starwars.api.services.impl
 
 import com.github.lassulfi.starwars.api.exceptions.InternalServerErrorException
 import com.github.lassulfi.starwars.api.exceptions.ResourceNotFoundException
+import com.github.lassulfi.starwars.api.exceptions.UnprocessableEntityException
 import com.github.lassulfi.starwars.api.model.Planeta
 import com.github.lassulfi.starwars.api.repository.PlanetaRepository
 import com.github.lassulfi.starwars.api.services.PlanetaService
@@ -27,8 +28,10 @@ class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
     override fun getAll(sort:String?, order: String?): List<Planeta> {
         val planetas: List<Planeta>
         try {
-            if (sort == null) planetas = repository.findAll().toList()
-            else planetas = recuperarListaOrdenada(repository, sort, order)
+            planetas = if (sort == null || sort.isEmpty()) repository.findAll().toList()
+            else recuperarListaOrdenada(repository, sort, order)
+        } catch (uex: UnprocessableEntityException) {
+          throw uex
         } catch (e: Exception) {
             throw InternalServerErrorException("Um erro inesperado ocorreu ao recuperar a lista de planetas")
         }
@@ -90,8 +93,13 @@ class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
     }
 
     private fun recuperarListaOrdenada(repository: PlanetaRepository, sort: String, order: String?): List<Planeta> {
-        return if (order != null && order.equals("asc", ignoreCase = true))
-            repository.findAll(Sort.by(sort).ascending()).toList()
-        else repository.findAll(Sort.by(sort).descending()).toList()
+        val validSortParams = listOf("nome", "clima", "terreno")
+        if (validSortParams.contains(sort)) {
+            return if (order != null && order.equals("asc", ignoreCase = true))
+                repository.findAll(Sort.by(sort).ascending()).toList()
+            else repository.findAll(Sort.by(sort).descending()).toList()
+        } else {
+            throw UnprocessableEntityException("Unprocessable Entity")
+        }
     }
 }
