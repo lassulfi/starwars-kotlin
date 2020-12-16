@@ -8,6 +8,8 @@ import com.github.lassulfi.starwars.api.repository.PlanetaRepository
 import com.github.lassulfi.starwars.api.services.PlanetaService
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Service
 import java.util.*
@@ -22,6 +24,17 @@ class PlanetaServiceImpl(val repository: PlanetaRepository): PlanetaService {
             throw InternalServerErrorException("Um erro inesperado ocorreu ao salvar o planeta")
         }
         return planeta.id
+    }
+
+    @Cacheable("planetas")
+    override fun getPageable(pageable: Pageable): Page<Planeta> {
+        val planetas: Page<Planeta>
+        try {
+            planetas = repository.findAll(pageable)
+        } catch (e: Exception) {
+            throw InternalServerErrorException("Um erro inesperado ocorreu ao recuperar o planeta")
+        }
+        return planetas
     }
 
     @Cacheable("planetas")

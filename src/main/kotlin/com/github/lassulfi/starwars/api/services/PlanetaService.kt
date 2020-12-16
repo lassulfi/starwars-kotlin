@@ -3,7 +3,7 @@ package com.github.lassulfi.starwars.api.services
 import com.github.lassulfi.starwars.api.model.Planeta
 import java.util.*
 
-interface PlanetaService {
+interface PlanetaService: PageableService<Planeta> {
     fun create(planeta: Planeta): UUID
     fun getAll(sort: String?, order: String? = "asc"): List<Planeta>
     fun getById(id: UUID): Planeta

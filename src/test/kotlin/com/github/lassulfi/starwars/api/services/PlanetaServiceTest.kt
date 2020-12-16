@@ -10,7 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.jupiter.api.*
 import org.mockito.Mockito.*
 import org.springframework.dao.RecoverableDataAccessException
-import org.springframework.data.domain.Sort
+import org.springframework.data.domain.*
 import java.util.*
 
 // CONSTANTS
@@ -55,9 +55,13 @@ class PlanetaServiceTest {
     private lateinit var id: UUID
     private lateinit var sort: String
     private lateinit var order: String
+    private lateinit var pageable: Pageable
+    private var limit: Int = 10
+    private var offset: Int = 1
     private lateinit var planetas: List<Planeta>
     private lateinit var service: PlanetaService
     private lateinit var repository: PlanetaRepository
+    private lateinit var pages: Page<Planeta>
 
     @BeforeEach
     internal fun setup() {
@@ -169,6 +173,24 @@ class PlanetaServiceTest {
             `dado que temos o parametro de ordenacao em ordem ascendente`()
             `dado que repository lanca uma excecao ao recuperar a lista ordenada`()
             `entao esperamos que uma excecao seja lancada ao recuperar a lista ordenada`()
+        }
+    }
+
+    @Nested
+    inner class `Recuperar planetas de forma paginada` {
+        @Test
+        fun `deve recuperar planetas de forma paginada`() {
+            `dado que temos um objeto pageable valido`()
+            `dado que repository retorna um objeto Page com sucesso`()
+            `quando chamamos o metodo para recuperar planetas em ordem paginada`()
+            `entao esperamos uma lista paginada`()
+        }
+
+        @Test
+        fun `deve lancar uma excecao ao recuperar a lista paginada`() {
+            `dado que temos um objeto pageable valido`()
+            `dado que repository lanca uma excecao ao recuperar planetas em ordem paginada`()
+            `entao esperamos que uma excecao seja lancada ao recuperar uma lista paginada`()
         }
     }
 
@@ -349,15 +371,14 @@ class PlanetaServiceTest {
         doReturn(false).`when`(repository).existsById(id)
     }
 
-
     private fun `dado que planeta repository lanca uma excecao ao atualizar`() {
         `when`(repository.save(planeta)).thenThrow(RecoverableDataAccessException("Banco de dados indisponivel"))
     }
 
+
     private fun `dado que o repositorio retorna uma entidade por id`() {
         `when`(repository.findById(id)).thenReturn(Optional.of(PLANETA))
     }
-
 
     private fun `dado que temos um planeta sem nome`() {
         this.planeta = PLANETA_SEM_NOME
@@ -380,6 +401,7 @@ class PlanetaServiceTest {
     private fun `dado que temos o parametro de ordenacao por nome`() {
         this.sort = "nome"
     }
+
 
     private fun `dado que temos o parametro de ordenacao em ordem ascendente`() {
         this.order = "asc"
@@ -429,6 +451,19 @@ class PlanetaServiceTest {
         this.sort = "invalido"
     }
 
+    private fun `dado que temos um objeto pageable valido`() {
+        pageable = PageRequest.of(offset, limit)
+    }
+
+    private fun `dado que repository retorna um objeto Page com sucesso`() {
+        val pages: Page<Planeta> = PageImpl(LISTA_PLANETAS)
+        doReturn(pages).`when`(repository).findAll(pageable)
+    }
+
+    private fun `dado que repository lanca uma excecao ao recuperar planetas em ordem paginada`() {
+        doThrow(RecoverableDataAccessException("Banco de dados indisponivel")).`when`(repository).findAll(pageable)
+    }
+
     fun `quando chamamos o metodo salvar`() {
         id = service.create(planeta)
     }
@@ -456,6 +491,11 @@ class PlanetaServiceTest {
     private fun `quando chamados o metodo recuperar todos de forma ordenada`() {
         this.planetas = service.getAll(this.sort, this.order)
     }
+
+    private fun `quando chamamos o metodo para recuperar planetas em ordem paginada`() {
+        this.pages = service.getPageable(pageable)
+    }
+
 
     fun `entao esperamos que o planeta seja salvo com sucesso`() {
         assertEquals(ID, planeta.id)
@@ -552,5 +592,13 @@ class PlanetaServiceTest {
 
     private fun `entao esperamos que seja lancada uma ResourceNotFoundException`() {
         assertThrows<UnprocessableEntityException> { service.getAll(sort) }
+    }
+
+    private fun `entao esperamos uma lista paginada`() {
+        assertEquals(LISTA_PLANETAS, pages.content)
+    }
+
+    private fun `entao esperamos que uma excecao seja lancada ao recuperar uma lista paginada`() {
+        assertThrows<InternalServerErrorException> { service.getPageable(pageable) }
     }
 }
